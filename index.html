@@ -5,149 +5,261 @@
 
 <title>Heart Service</title>
 
+<!-- =====================================================
+     METADATA
+===================================================== -->
 <meta name="author" content="dulsys">
-<meta name="description" content="Interactive heart system with controlled failure">
-<meta name="version" content="1.1.0">
+<meta name="description" content="Interactive heart system with pixel-art emotional payload">
+<meta name="version" content="2.0.0">
 
+<!-- =====================================================
+     GLOBAL STYLES
+===================================================== -->
 <style>
-  body {
-    background:#0b0f14;
-    color:#7df9ff;
-    font-family:monospace;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    height:100vh;
-    overflow:hidden;
+/* ---------- RESET ---------- */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* ---------- BODY ---------- */
+body {
+  background: #0b0f14;
+  color: #7df9ff;
+  font-family: monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---------- CONSOLE ---------- */
+.console {
+  width: 360px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* ---------- HEART ---------- */
+.heart {
+  width: 80px;
+  height: 80px;
+  background: #ff3b6f;
+  position: relative;
+  transform: rotate(-45deg);
+  animation: beat 0.9s infinite;
+  cursor: pointer;
+}
+
+.heart::before,
+.heart::after {
+  content: "";
+  width: 80px;
+  height: 80px;
+  background: #ff3b6f;
+  border-radius: 50%;
+  position: absolute;
+}
+
+.heart::before { top: -40px; }
+.heart::after { left: 40px; }
+
+@keyframes beat {
+  0%,100% { transform: scale(1) rotate(-45deg); }
+  50% { transform: scale(1.2) rotate(-45deg); }
+}
+
+/* ---------- MINI HEARTS ---------- */
+.mini {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #ff9ab5;
+  transform: rotate(-45deg);
+  animation: scatter 1s forwards;
+}
+
+.mini::before,
+.mini::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: #ff9ab5;
+  border-radius: 50%;
+  position: absolute;
+}
+
+.mini::before { top: -6px; }
+.mini::after { left: 6px; }
+
+@keyframes scatter {
+  to {
+    transform: translate(var(--x), var(--y)) rotate(-45deg);
+    opacity: 0;
   }
+}
 
-  .console {
-    width:340px;
-    font-size:13px;
-    line-height:1.4;
-    margin-bottom:20px;
-  }
+/* ---------- CANVAS ---------- */
+canvas {
+  display: none;
+  margin-top: 20px;
+  image-rendering: pixelated;
+}
 
-  .heart {
-    width:80px;
-    height:80px;
-    background:#ff3b6f;
-    position:relative;
-    transform:rotate(-45deg);
-    animation:beat 0.9s infinite;
-    cursor:pointer;
-  }
-
-  .heart::before,
-  .heart::after {
-    content:"";
-    width:80px;
-    height:80px;
-    background:#ff3b6f;
-    border-radius:50%;
-    position:absolute;
-  }
-
-  .heart::before { top:-40px; }
-  .heart::after { left:40px; }
-
-  @keyframes beat {
-    0%,100% { transform:scale(1) rotate(-45deg); }
-    50% { transform:scale(1.2) rotate(-45deg); }
-  }
-
-  .mini {
-    position:absolute;
-    width:12px;
-    height:12px;
-    background:#ff9ab5;
-    transform:rotate(-45deg);
-    animation:scatter 1s forwards;
-  }
-
-  .mini::before,
-  .mini::after {
-    content:"";
-    width:12px;
-    height:12px;
-    background:#ff9ab5;
-    border-radius:50%;
-    position:absolute;
-  }
-
-  .mini::before { top:-6px; }
-  .mini::after { left:6px; }
-
-  @keyframes scatter {
-    to {
-      transform:translate(var(--x),var(--y)) rotate(-45deg);
-      opacity:0;
-    }
-  }
-
-  .final {
-    opacity:0;
-    margin-top:25px;
-    transition:opacity 1s;
-    text-align:center;
-  }
+/* ---------- FINAL MESSAGE ---------- */
+.final {
+  opacity: 0;
+  margin-top: 20px;
+  text-align: center;
+  transition: opacity 1s;
+}
 </style>
 </head>
 
 <body>
 
+<!-- =====================================================
+     CONSOLE LOG
+===================================================== -->
 <div class="console" id="log"></div>
 
+<!-- =====================================================
+     HEART TRIGGER
+===================================================== -->
 <div class="heart" onclick="shutdown()"></div>
 
+<!-- =====================================================
+     PIXEL CANVAS
+===================================================== -->
+<canvas id="scene" width="160" height="120"></canvas>
+
+<!-- =====================================================
+     FINAL TEXT
+===================================================== -->
 <div class="final" id="final">
-[SUCCESS] Deployment completed<br><br>
-<span style="color:#ff9ab5">
-User interaction caused system overload 💥<br>
-Feelings successfully deployed.
-</span>
+[SUCCESS] Emotional payload delivered 💗
 </div>
 
+<!-- =====================================================
+     SCRIPT SECTION
+===================================================== -->
 <script>
-  const logs = [
-    "[INFO] Heart service booting...",
-    "[INFO] Initializing pulse monitor (72 BPM)",
-    "[INFO] System status: RUNNING",
-    "[INFO] Awaiting user interaction..."
-  ];
+/* =====================================================
+   SYSTEM LOGS
+===================================================== */
+const logs = [
+  "[INFO] Booting Heart Service...",
+  "[INFO] Pulse monitor online (72 BPM)",
+  "[INFO] Emotional buffer stable",
+  "[INFO] Awaiting user interaction..."
+];
 
-  let i = 0;
-  const logEl = document.getElementById("log");
+let logIndex = 0;
+const logEl = document.getElementById("log");
 
-  function writeLogs() {
-    if (i < logs.length) {
-      logEl.innerHTML += logs[i] + "<br>";
-      i++;
-      setTimeout(writeLogs, 600);
-    }
+function writeLogs() {
+  if (logIndex < logs.length) {
+    logEl.innerHTML += logs[logIndex] + "<br>";
+    logIndex++;
+    setTimeout(writeLogs, 600);
   }
+}
 
-  writeLogs();
+writeLogs();
 
-  function shutdown() {
-    document.querySelector(".heart").style.display = "none";
-    logEl.innerHTML += "[WARN] Threshold exceeded<br>[WARN] Initiating shutdown...<br>";
+/* =====================================================
+   SHUTDOWN SEQUENCE
+===================================================== */
+function shutdown() {
+  document.querySelector(".heart").style.display = "none";
+  logEl.innerHTML +=
+    "[WARN] Threshold exceeded<br>" +
+    "[WARN] Releasing emotional payload...<br>";
 
-    for (let j = 0; j < 30; j++) {
-      const m = document.createElement("div");
-      m.className = "mini";
-      m.style.setProperty("--x", Math.random()*500-250+"px");
-      m.style.setProperty("--y", Math.random()*500-250+"px");
-      document.body.appendChild(m);
-      setTimeout(()=>m.remove(),1000);
-    }
+  explodeHearts();
 
-    setTimeout(()=>{
-      document.getElementById("final").style.opacity = 1;
-    },700);
+  setTimeout(() => {
+    showPixelScene();
+  }, 1000);
+}
+
+/* =====================================================
+   HEART EXPLOSION
+===================================================== */
+function explodeHearts() {
+  for (let i = 0; i < 35; i++) {
+    const m = document.createElement("div");
+    m.className = "mini";
+    m.style.setProperty("--x", Math.random() * 500 - 250 + "px");
+    m.style.setProperty("--y", Math.random() * 500 - 250 + "px");
+    document.body.appendChild(m);
+    setTimeout(() => m.remove(), 1000);
   }
+}
+
+/* =====================================================
+   PIXEL ART SCENE
+===================================================== */
+function showPixelScene() {
+  const canvas = document.getElementById("scene");
+  const ctx = canvas.getContext("2d");
+
+  canvas.style.display = "block";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Pixel size
+  const p = 4;
+
+  // Colors
+  const skin = "#f2c9ac";
+  const hair1 = "#5a3a1a";
+  const hair2 = "#1f1f1f";
+  const shirt1 = "#7df9ff";
+  const shirt2 = "#ff9ab5";
+
+  /* -------- GIRL -------- */
+  drawPixelPerson(40, 40, hair1, skin, shirt1);
+
+  /* -------- BOY -------- */
+  drawPixelPerson(80, 40, hair2, skin, shirt2);
+
+  /* -------- KISS HEART -------- */
+  ctx.fillStyle = "#ff3b6f";
+  ctx.fillRect(72, 56, p, p);
+  ctx.fillRect(76, 56, p, p);
+  ctx.fillRect(74, 60, p, p);
+
+  setTimeout(() => {
+    document.getElementById("final").style.opacity = 1;
+  }, 600);
+}
+
+/* =====================================================
+   PIXEL PERSON FUNCTION
+===================================================== */
+function drawPixelPerson(x, y, hair, skin, shirt) {
+  const canvas = document.getElementById("scene");
+  const ctx = canvas.getContext("2d");
+  const p = 4;
+
+  // Hair
+  ctx.fillStyle = hair;
+  ctx.fillRect(x, y, p*4, p*2);
+
+  // Face
+  ctx.fillStyle = skin;
+  ctx.fillRect(x, y + p*2, p*4, p*4);
+
+  // Body
+  ctx.fillStyle = shirt;
+  ctx.fillRect(x, y + p*6, p*4, p*4);
+}
 </script>
 
 </body>
 </html>
+
