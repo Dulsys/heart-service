@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<title>Heart Service</title>
+
+<meta name="author" content="dulsys">
+<meta name="description" content="Interactive heart system with controlled failure">
+<meta name="version" content="1.1.0">
+
+<style>
+  body {
+    background:#0b0f14;
+    color:#7df9ff;
+    font-family:monospace;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
+    overflow:hidden;
+  }
+
+  .console {
+    width:340px;
+    font-size:13px;
+    line-height:1.4;
+    margin-bottom:20px;
+  }
+
+  .heart {
+    width:80px;
+    height:80px;
+    background:#ff3b6f;
+    position:relative;
+    transform:rotate(-45deg);
+    animation:beat 0.9s infinite;
+    cursor:pointer;
+  }
+
+  .heart::before,
+  .heart::after {
+    content:"";
+    width:80px;
+    height:80px;
+    background:#ff3b6f;
+    border-radius:50%;
+    position:absolute;
+  }
+
+  .heart::before { top:-40px; }
+  .heart::after { left:40px; }
+
+  @keyframes beat {
+    0%,100% { transform:scale(1) rotate(-45deg); }
+    50% { transform:scale(1.2) rotate(-45deg); }
+  }
+
+  .mini {
+    position:absolute;
+    width:12px;
+    height:12px;
+    background:#ff9ab5;
+    transform:rotate(-45deg);
+    animation:scatter 1s forwards;
+  }
+
+  .mini::before,
+  .mini::after {
+    content:"";
+    width:12px;
+    height:12px;
+    background:#ff9ab5;
+    border-radius:50%;
+    position:absolute;
+  }
+
+  .mini::before { top:-6px; }
+  .mini::after { left:6px; }
+
+  @keyframes scatter {
+    to {
+      transform:translate(var(--x),var(--y)) rotate(-45deg);
+      opacity:0;
+    }
+  }
+
+  .final {
+    opacity:0;
+    margin-top:25px;
+    transition:opacity 1s;
+    text-align:center;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="console" id="log"></div>
+
+<div class="heart" onclick="shutdown()"></div>
+
+<div class="final" id="final">
+[SUCCESS] Deployment completed<br><br>
+<span style="color:#ff9ab5">
+User interaction caused system overload 💥<br>
+Feelings successfully deployed.
+</span>
+</div>
+
+<script>
+  const logs = [
+    "[INFO] Heart service booting...",
+    "[INFO] Initializing pulse monitor (72 BPM)",
+    "[INFO] System status: RUNNING",
+    "[INFO] Awaiting user interaction..."
+  ];
+
+  let i = 0;
+  const logEl = document.getElementById("log");
+
+  function writeLogs() {
+    if (i < logs.length) {
+      logEl.innerHTML += logs[i] + "<br>";
+      i++;
+      setTimeout(writeLogs, 600);
+    }
+  }
+
+  writeLogs();
+
+  function shutdown() {
+    document.querySelector(".heart").style.display = "none";
+    logEl.innerHTML += "[WARN] Threshold exceeded<br>[WARN] Initiating shutdown...<br>";
+
+    for (let j = 0; j < 30; j++) {
+      const m = document.createElement("div");
+      m.className = "mini";
+      m.style.setProperty("--x", Math.random()*500-250+"px");
+      m.style.setProperty("--y", Math.random()*500-250+"px");
+      document.body.appendChild(m);
+      setTimeout(()=>m.remove(),1000);
+    }
+
+    setTimeout(()=>{
+      document.getElementById("final").style.opacity = 1;
+    },700);
+  }
+</script>
+
+</body>
+</html>
